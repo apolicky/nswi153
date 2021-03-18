@@ -164,10 +164,10 @@ class ComponentT1 extends ComponentBase implements tIFCE {
      */
     public $s;
 
-    /**
-     * @inject nIFCE
-     */
-    public $ne;
+    // /**
+    //  * @inject nIFCE
+    //  */
+    // public $ne;
 
     public function foo() {
         echo "foo";
@@ -250,3 +250,33 @@ class ComponentS extends ComponentBase
 class ComponentR extends ComponentBase
 {
 }
+
+interface qIFCE {
+    // public function foo();
+}
+
+class ComponentP extends ComponentBase implements qIFCE {
+    
+    /**
+     * @inject oIFCE
+     */
+    public $o;
+}
+
+interface oIFCE {}
+
+class ComponentM extends ComponentBase {
+
+    /** @inject oIFCE */
+    public $mi;
+}
+
+// interface TestInterface {}
+
+// class ComponentA extends ComponentBase {
+    
+//     /**
+//      * @inject TestInterface
+//      */
+//     public $mi;
+// }

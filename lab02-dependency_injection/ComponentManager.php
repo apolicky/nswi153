@@ -32,7 +32,8 @@ class ComponentManager
 
     private $component_holder = [];
 
-    private $implements_interface = []; // $implements_interface[interfaceName] = componentName[];
+    // $implements_interface[interfaceName] = componentName[];
+    private $implements_interface = []; 
     private $known_components = [];
     private $constructor_dependencies = [];
     private $property_dependencies = [];
@@ -152,9 +153,13 @@ class ComponentManager
                     /*borrowed from https://www.php.net/manual/en/reflectionclass.getdoccomment.php */
                     //define the regular expression pattern to use for string matching
                     $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
+                    $pattern2 = "#(@inject\s+[a-zA-Z0-9,()_]+)#";
 
                     //perform the regular expression on the string provided
-                    preg_match_all($pattern, $doc, $matches, PREG_PATTERN_ORDER);
+                    preg_match_all($pattern2, $doc, $matches, PREG_PATTERN_ORDER);
+
+                    // echo "matches of regex:\n";
+                    // print_r($matches);
 
                     if (count($matches[0]) === 1) {
                         $annot = explode(" ",$matches[0][0]);
@@ -363,13 +368,13 @@ class ComponentManager
                     $classOrInterface = $instances[0];
                 }
                 else {
+                    // echo "-------------------------\n";
+                    // print_r($instances);
                     throw new \Exception("Multiple classes implement interface $classOrInterface.");
                 }
             }
             // interface not known to us
             else {
-                // print_r($this->implements_interface);
-                // print_r($this->known_components);
                 throw new \Exception("Unknown interface $classOrInterface. No existing implementation.");
             }
         }
@@ -391,13 +396,17 @@ class ComponentManager
         } 
         // $classOrInterface must be created. (It should be possible)
         else {
+            // will there be a problem in the next phase?
+            if ($this->tbd_injection_problem($classOrInterface)){
+                // print_r($this->component_holder);
+                throw new \Exception("Byl by problem c11. Wanted instance: $classOrInterface\n");
+            }
 
             $cls_instance = $this->create_component2($classOrInterface);
 
             if ($inside === false) {
                 while(count($this->newly_constructed)) {
                     $i = array_pop($this->newly_constructed);
-                    // echo "injecting properties to $i\n";
                     $this->inject_prop_dependencies2($i);
                 }
                 $this->newly_constructed = [];
@@ -426,7 +435,6 @@ class ComponentManager
         return $ret;
     }
 
-
     private function inject_prop_dependencies2(string $class_nme) : void {
         $props = [];
 
@@ -440,6 +448,34 @@ class ComponentManager
             $this->component_holder[$class_nme]->$prop_name = $prop;
         }
     }
+
+    private function tbd_injection_problem(string $class_nme) : bool {
+        if(array_key_exists($class_nme, $this->property_dependencies)) {
+            foreach($this->property_dependencies[$class_nme] as $prop_name => $prop) {
+                // $prop is an interface
+                if(interface_exists($prop)) {
+                    if (count($this->implements_interface) &&
+                        array_key_exists($prop, $this->implements_interface)) {
+
+                        $instances = $this->implements_interface[$prop];
+                        if(count($instances) !== 1) {
+                            // echo "PROBLEM $class_nme: ";
+                            // echo "number of instances of interface $prop !== 1\n";
+                            return true;
+                        }
+                    }
+                    // interface not known to us
+                    else {
+                        // echo "PROBLEM $class_nme: ";
+                        // echo "existing ifce $prop but not implemented?\n";
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }
 
 

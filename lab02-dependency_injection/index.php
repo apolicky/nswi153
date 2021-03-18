@@ -16,6 +16,8 @@ function main()
         // this may be expensive -> that is why we save the annotations in cache file
         // $manager->loadComponentsAnnotations([ 'ComponentA', 'ComponentB', 'ComponentC', 'ComponentD'/*, 'ComponentE' */]);
         $manager->loadComponentsAnnotations([ 'ComponentW', 'ComponentV']);
+        // $manager->loadComponentsAnnotations(['ComponentA']);
+        $manager->loadComponentsAnnotations(['ComponentM']);
         file_put_contents(CACHE_FILE, $manager->serialize());
 
     // } else {
@@ -27,6 +29,8 @@ function main()
     // $a = $manager->getInstance('ComponentX');
     $a = $manager->getInstance('ComponentW');
     // $a = $manager->getInstance('tIFCE');
+    // $a = $manager->getInstance('ComponentA');
+    // $a = $manager->getInstance('ComponentM');
 
     echo "index.php print_r(\$a);\n";
     print_r($a);
