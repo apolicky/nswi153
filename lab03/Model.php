@@ -38,10 +38,15 @@ class Model
      */
     public function getAllLectures(): array
     {
+        $result = [];
 
-        // TODO
+        foreach($this->norm->lecture() as $lecture) {
+            $result[$lecture['id']]['code'] = $lecture['code'];
+            $result[$lecture['id']]['name'] = $lecture['name'];
+            $result[$lecture['id']]['students'] = $this->norm->student()->where("lecture_id", $lecture['id'])->count("*");
+        }
 
-        return [];
+        return $result;
     }
 
     /**
@@ -51,10 +56,17 @@ class Model
      */
     public function getLecturesTeachers(): array
     {
+        $result = [];
 
-        // TODO
+        foreach($this->norm->user() as $usr) {
+            foreach($this->norm->teacher()->where("user_id", $usr['id']) as $teaches) {
+                $lec_code = $this->norm->lecture()->select('code')->where("id", $teaches['lecture_id'])->fetch()['code'];
+                // echo ($lec_code); //['code'];
+                $result[$lec_code][] = "$usr[name] $usr[surname]";
+            }
+        }
 
-        return [];
+        return $result;
     }
 
     /**
@@ -64,10 +76,15 @@ class Model
      */
     public function getEnrolledStudents(string $code): array
     {
+        $result = [];
 
-        // TODO
+        foreach($this->norm->user()->where("id", 
+            $this->norm->student()->select("user_id")->where("lecture_id",
+            $this->norm->lecture()->where("code", $code)->fetch()['id'])) as $student) {
+                $result[$student['id']] = "$student[name] $student[surname]";
+            }
 
-        return [];
+        return $result;
     }
 
     /**
@@ -78,9 +95,10 @@ class Model
      */
     public function enrollStudent(int $userId, string $lectureCode): void
     {
-
-        // TODO
-
+        $lec_id =  $this->norm->lecture()->where('code', $lectureCode)->fetch()['id'];
+        if ($lec_id !== null) {
+            $this->norm->student()->insert_update(array("user_id" => $userId), array("lecture_id" => $lec_id));
+        }
     }
 
     /**
@@ -92,8 +110,17 @@ class Model
     public function updateLectureName(string $code, string $newName): ?string
     {
 
-        // TODO
-
-        return null;
+        $res = $this->norm->lecture()->where('code', $code)->fetch();
+        
+        if($res !== null){
+            $old = $res['name'];
+            $res['name'] = $newName;
+            $res->update();
+            
+            return $old;
+        } 
+        else {
+            return null;
+        }
     }
 }
