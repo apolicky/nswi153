@@ -95,9 +95,9 @@ class Model
      */
     public function enrollStudent(int $userId, string $lectureCode): void
     {
-        $lec_id =  $this->norm->lecture()->where('code', $lectureCode)->fetch()['id'];
-        if ($lec_id !== null) {
-            $this->norm->student()->insert_update(array("user_id" => $userId), array("lecture_id" => $lec_id));
+        $lec_id = $this->norm->lecture()->where('code', $lectureCode)->fetch()['id'];
+        if ($lec_id !== null && $this->norm->student()->where('user_id', $userId)->where('lecture_id',$lec_id)->count() === 0) {
+            $this->norm->student()->insert(array('user_id' => $userId, 'lecture_id' => $lec_id));
         }
     }
 
@@ -116,7 +116,7 @@ class Model
             $old = $res['name'];
             $res['name'] = $newName;
             $res->update();
-            
+
             return $old;
         } 
         else {

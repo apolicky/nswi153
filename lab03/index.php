@@ -28,6 +28,10 @@ try {
     print_r($model->getEnrolledStudents('NPRG042'));
     echo "Enrolling student #13 for NPRG042:\n";
     $model->enrollStudent(13, 'NPRG042');
+    $model->enrollStudent(13, 'NPRG042');
+    $model->enrollStudent(13, 'NPRG042');
+    $model->enrollStudent(13, 'NPRG042');
+    $model->enrollStudent(13, 'NPRG042');
     print_r($model->getEnrolledStudents('NPRG042'));
     echo "--------------------------------------------------------------------------------\n";
 
