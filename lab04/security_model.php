@@ -193,7 +193,7 @@ class SecurityModel implements ISecurityModel
 		 */
 
 		$u = [
-			"getName" => ["anyone"],
+			"getFullName" => ["anyone"],
 			"getRole" => ["isCeo"],
 			"~^get.*~" => ["isAuditor"],
 			"~.*~" => ["isAdmin"]
@@ -206,93 +206,42 @@ class SecurityModel implements ISecurityModel
 			"~get(Name|Description)~" => ["isMemberOfChildProject"],
 			"~^(?!(add|remove)Manager).*~" => ["isManager"],
 			"setTaskComplete" => ["isDirectMember"],
-			"~(get|set).~" => ["isManager"],
 			"~^(?!(set|add|delete)Task).*~" => ["isCeo"],
 			"~.*~" => ["isAdmin"]
 		];
 
 		$this->aclPolicies['proj'] = new IndexedContainer($p);
-
-
-		/**
-		 * employee -> getName() kazdeho cloveka
-		 * 			-> get*() vsech projektu, kde je primo clen
-		 * 			-> getName, getDescri(), nadrazenych kde je clen nebo manager
-		 * 			-> setTaskComplete, kde je primo clen
-		 * 			-> vse az na add/del manager u tech, co je manazer
-		 * 			-> manazer projektu je tranzitivne manazer podprojektu
-		 * 
-		 * ceo 	-> vse co employee
-		 * 		-> getRole kazdeho
-		 * 		-> get|set vse na projekt, kde neni napsano 'Task'
-		 * 			-> muze pokud je explicitni clen tymu
-		 * 
-		 * admin -> vse muze
-		 * auditor -> muze vsechno get
-		 */
-
-
-
 	}
 
 
 	public function hasPermissions(IUser $user, object $resource, string $action): bool
 	{
-
-		// what is the user category
-
 		$usr_role = $user->getRole();
-
-		// echo "\n    role: $usr_role, ";
+		$resource_type = null;
 
 		if($resource instanceof IUser) {
-			// echo "resource: user, ";
-			$allowed_users = array_merge(...$this->aclPolicies['usr']->find($action));
+			$resource_type = 'usr';
+		}
+		else if ($resource instanceof IProject) {
+			$resource_type = 'proj';
+		}
+		else {
+			return false;
+		}
+
+		$found = $this->aclPolicies[$resource_type]->find($action);
+		if($found) {
+			$allowed_users = array_merge(...$found);
+			
 			if($allowed_users !== false) {
+				// if at least one is satisfied -> true
 				foreach($allowed_users as $usr_specification) {
 					if($this->aclPolicies['project']->$usr_specification($user, $resource)) {
-						// echo "holds TRUE because $usr_specification holds.    ";
 						return true;
 					}
 				}
 			}		
 		}
-		else if ($resource instanceof IProject) {
-			// echo "resource: project, ";
-			$found = $this->aclPolicies['proj']->find($action);
-			if($found) {
-				$allowed_users = array_merge(...$found);
-				
-				if($allowed_users !== false) {
-					foreach($allowed_users as $usr_specification) {
-						if($this->aclPolicies['project']->$usr_specification($user, $resource)) {
-							// echo "holds TRUE because $usr_specification holds.    ";
-							return true;
-						}
-					}
-				}		
-			}
-			else {
-				echo "not found ... ";
-			}
-			
-			
-		}
-		
-
-
-		// $this->aclPolicies['project'] = 
-
-		// is this action even possible?
-
-
-
-			// can this aaction be applied to $resource?
-
-		/*
-		 * Main security model algorithm.
-		 * Check the stored rules in the model and decide, whether given action is allowed.
-		 */
 
 		return false;
 	}
