@@ -215,14 +215,7 @@ class SecurityModel implements ISecurityModel
 
 
 	public function hasPermissions(IUser $user, object $resource, string $action): bool
-	{
-		$usr_role = $user->getRole();
-		$resource_type = null;
-
-		if($usr_role === 'admin') return true;
-		if($usr_role === 'auditor' && preg_match("~get.*~", $action)) return true;
-
-
+	{ 
 		if($resource instanceof IUser) {
 			$resource_type = 'usr';
 		}

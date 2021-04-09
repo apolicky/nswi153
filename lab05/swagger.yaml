@@ -1,0 +1,41 @@
+swagger: '2.0'
+info:
+  title: 'Num API'
+  version: 1.0.0
+  description: 'Numbers, numbers everywhere....'
+host: webik.ms.mff.cuni.cz
+basePath: /
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  '/unary/negation':
+    get:
+      operationId: getUnaryNegation
+      description: 'Oposite'
+      parameters:
+        -
+          name: input
+          type: number
+          format: double
+          in: query
+          required: true
+          description: 'This is the input'
+      responses:
+        '200':
+          $ref: '#/responses/Result'
+          description: OK
+
+responses:
+  'Result':
+    description: 'Result of arithmetic operation'
+    schema:
+      type: object
+      properties:
+        'result':
+          type: number
+          format: double
