@@ -3,3 +3,6 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
 </IfModule>
+
+Header set Access-Control-Allow-Methods *
+Header set Access-Control-Allow-Headers content-type

@@ -3,8 +3,8 @@ info:
   title: 'Num API'
   version: 1.0.0
   description: 'Numbers, numbers everywhere....'
-host: webik.ms.mff.cuni.cz
-basePath: /
+basePath: '/~polickya/numapi'
+host: 'webik.ms.mff.cuni.cz'
 schemes:
   - https
 consumes:
@@ -28,7 +28,38 @@ paths:
       responses:
         '200':
           $ref: '#/responses/Result'
-          description: OK
+
+  '/binary/{op}':
+    get:
+      operationId: getBinaryOperation
+      description: 'Apply operation on two numbers'
+      parameters:
+        -
+          name: op
+          type: string
+          enum:
+            - add
+            - sub
+          in: path
+          required: true
+          description: 'Name of the operation'
+        -
+          name: left
+          type: number
+          format: double
+          in: query
+          required: true
+          description: 'Left operand'
+        -
+          name: right
+          type: number
+          format: double
+          in: query
+          required: true
+          description: 'Right operand'
+      responses:
+        '200':
+          $ref: '#/responses/Result'
 
 responses:
   'Result':
