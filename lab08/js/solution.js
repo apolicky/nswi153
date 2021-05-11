@@ -21,11 +21,11 @@ class ListItem {
 	 * Initialize new node with no children
 	 * @param {string} caption 
 	 */
-	constructor(caption)
+	constructor(caption, parent = null)
 	{
 		this.caption = caption;  // this node's caption
 		this.children = [];      // array of child nodes (ListItem objects)
-		this.parent = null;      // reference to a parent ListItem (null for root)
+		this.parent = parent;      // reference to a parent ListItem (null for root)
 		this.collapsed = false;  // whether the children are visible
 		this._domObj = null;     // reference to corresponding DOM <li> element
 		this._domParent = null;  // reference to parent DOM <ul> element
@@ -55,8 +55,7 @@ class ListItem {
 		ev.stopPropagation();
 
 		this._promptForName("Item name:",this.caption).then(capt => {
-			this.caption = capt;
-			this.render();
+			this.setCaption(capt)
 		}).catch(()=>{});
 		// TODO (see _promptForName)
 
@@ -82,8 +81,7 @@ class ListItem {
 		ev.stopPropagation();
 
 		this._promptForName("Item name:").then(capt => {
-			const newItem = new ListItem(capt);
-			newItem.parent = this;
+			const newItem = new ListItem(capt, this);
 			this.addChild(newItem);
 			this.render();
 		}).catch(()=>{});
@@ -99,8 +97,7 @@ class ListItem {
 		ev.stopPropagation();
 
 		this._promptForName("Item name:").then(capt => {
-			const newItem = new ListItem(capt);
-			newItem.parent = this;
+			const newItem = new ListItem(capt, this);
 			this.addChild(newItem);
 			this.render();
 		}).catch(()=>{});
@@ -182,13 +179,13 @@ class ListItem {
 		domParent = domParent || this._domParent;
 		if (!domParent) return;
 
-		if(domParent.is("div")) {
-			domParent.empty();
-			
-			const newChildren = $("<ul></ul>");
-			this.children.forEach(child => child.render(newChildren));
+		const newChildren = $("<ul></ul>");
+		this.children.forEach(child => child.render(newChildren));
+		newChildren.append($("<li></li>").append(this._createIcons(false, false, true)));
 
-			newChildren.append($("<li></li>").append(this._createIcons(false, false, true)));
+		if(domParent.hasClass('nested-list-container')) {
+			// domParent.is("div")) {
+			domParent.empty();
 
 			domParent.append(newChildren);
 			this._domParent = domParent;
@@ -199,15 +196,11 @@ class ListItem {
 			.append(this._createIcons(true, this.children.length === 0, false))
 			.dblclick(this._dblclickHandler);
 
-		if(this.collapsed) {
-			newDom.addChild(this.collapsed);
+		if (this.collapsed) {
+			newDom.addClass("collapsed");
 		}
 
 		if(this.children.length !== 0) {
-			const newChildren = $("<ul></ul>");
-			this.children.forEach(child => child.render(newChildren));
-
-			newChildren.append($("<li></li>").append(this._createIcons(false, false, true)));
 			newDom.append(newChildren).addClass("parent");
 		}
 
@@ -233,6 +226,7 @@ class ListItem {
 			throw new Error("Given child is not a ListItem object.");
 		}
 		// TODO - step #2
+		child.parent = this;
 		this.children.push(child);
 		if(this._domObj) {
 			this.render();
@@ -293,12 +287,14 @@ class ListItem {
 	 */
 	static buildNestedList(container, data)
 	{
+		console.log("container: " + container);
+		console.log("data: " + data);
+
 		// Internal recursive function that buids a ListItem (and all its children) from given data item.
 		const build = (dataItem,parent) => {
 			
 			// TODO - step #3
-			const item = new ListItem(dataItem.caption);
-			item.parent = parent;
+			const item = new ListItem(dataItem.caption, parent);
 			if(dataItem.children) {
 				dataItem.children.map(child => build(child, item)).forEach(child => item.addChild(child));
 			}
@@ -313,6 +309,8 @@ class ListItem {
 
 		// Build the root from fake dataItem which holds the data as children (root stands above these data).
 		const root = build({ caption: '', children: data });
+		console.log("root:"+root);
+		console.log("container: "+ container)
 		root.render(container);
 		return root;
 	}
