@@ -2,6 +2,8 @@
  * Exercise on immutable object and function memoization.
  */
 
+const { type } = require("os");
+
 /**
  * Creates immutable structure (imutex = immutable in ReCodEx).
  * Basically creates a deep copy where all objects (and arrays) are frozen.
@@ -33,24 +35,68 @@ const createImutex = obj => {
  * @return {*} updated imutex structure 
  */
 const updateImutex = (imu, path, value) => {
-	var temp = {...imu};
+	
+	const shallowCpy = obj => {
+		if(Array.isArray(obj)) {
+			return [...obj];
+		}
+		else if(obj === null) {
+			return obj
+		}
+		else if(typeof obj === 'object') {
+			return {...obj};
+		}
+		else {
+			return obj;
+		}
+	}
 	
 	const injectVal = (to,pth,val) => {
-		var newTo = {...to};
-		var newToPth = {...newTo[pth[0]]};
-		if(pth.length === 1){
-			newTo[pth[0]] = val;
+		
+		// console.log('injectVal, to' + to + '(' + typeof to + '), pth:' + pth, );
+		// console.log(to);
+
+		if(typeof to !== "object" && !Array.isArray(to)) {
+			if(typeof to === 'number') to = [];
+			else if(typeof to === 'string') to = {};
+		}
+
+		var newTo = shallowCpy(to);
+		// console.log('newTo:');
+		// console.log(typeof newTo);
+		// console.log(newTo);
+		// var newToPth = shallowCpy(newTo[pth[0]]);
+
+		if(typeof newTo === "undefined" || newTo === null) {
+			// console.log('newTo undefined, pth0: ' + pth[0]);
+			newTo = (typeof pth[0] === "number") ? [] : {};
+			// console.log(newTo);
+		}
+
+		if(pth.length === 0){
+			newTo = createImutex(val);
+			Object.freeze(newTo);
+			return newTo;
+		}
+		else if(pth.length === 1){
+			newTo[pth[0]] = createImutex(val);
 			Object.freeze(newTo);;
 			return newTo;
 		}
 		else{
-			newTo[pth[0]] = injectVal(newToPth,pth.slice(1),val);
+			newTo[pth[0]] = injectVal(newTo[pth[0]],pth.slice(1),val);
 			Object.freeze(newTo);
 			return newTo;
 		}
 	}
 
+	// console.log('imu:' + imu + '(' + typeof imu + ')');
+
+	var temp = shallowCpy(imu);
+	// console.log(temp);
+
 	var ret = injectVal(temp,path,value);
+	Object.freeze(ret);
 	return ret;
 }
 
